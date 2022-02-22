@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import useStateRef from 'react-usestateref';
 import { View, Text, StyleSheet, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -12,7 +13,9 @@ const DismissNumericKeyboard = ({children}) => {
 
 const MathScreen = ({ route }) => {
   const { type } = route.params
-  const [score, setScore] = useState(0);
+  const [score, setScore, scoreRef] = useStateRef(0);
+  const [lastScore, setLastScore] = useState(0);
+  const [curTimer, setCurTimer] = useState(60);
   const [open, setOpen] = useState(false)
   const [userNumberInput, setUserNumberInput] = useState("");
   const [difficulty, setDifficulty] = useState("Easy");
@@ -30,14 +33,32 @@ const MathScreen = ({ route }) => {
     } else if (type=="Division") {
       setIconName("divide")
     }
+    setLastScore(0);
   }, [])
 
   useEffect(()=>{
     changeNumbers()
+    setCurTimer(10);
+    setScore(0);
+    setTimeout(()=>setUpTimer(10), 1000);
   }, [difficulty])
 
   const getRandomInteger = (max) => {
     return Math.floor(Math.random()*max);
+  }
+
+  const setUpLastScore = () => {
+    setLastScore(scoreRef.current);
+    setTimeout(()=>setScore(0), 200);
+  }
+
+  const setUpTimer = (curTime) => {
+    if (curTime > 0) {
+      setCurTimer(curTime-1);
+      setTimeout(()=>setUpTimer(curTime-1), 1000);
+    } else {
+      setUpLastScore();
+    }
   }
 
   const changeNumbers = () => {
@@ -60,18 +81,18 @@ const MathScreen = ({ route }) => {
       }
     } else if (type == "Division") {
       if (difficulty == "Easy") {
-        const secNum = getRandomInteger(10)
-        const firstNum = secNum * getRandomInteger(10)
+        const secNum = getRandomInteger(9) + 1
+        const firstNum = secNum * (getRandomInteger(9)+1)
         setFirstNum(firstNum)
         setSecondNum(secNum)
       } else if (difficulty == "Medium") {
-        const secNum = getRandomInteger(100)
-        const firstNum = secNum * getRandomInteger(10)
+        const secNum = getRandomInteger(99)+1
+        const firstNum = secNum * (getRandomInteger(9)+1)
         setFirstNum(firstNum)
         setSecondNum(secNum)
       } else if (difficulty == "Hard") {
-        const secNum = getRandomInteger(1000)
-        const firstNum = secNum * getRandomInteger(100)
+        const secNum = getRandomInteger(999)+1
+        const firstNum = secNum * (getRandomInteger(99) +1)
         setFirstNum(firstNum)
         setSecondNum(secNum)
       }
@@ -119,7 +140,8 @@ const MathScreen = ({ route }) => {
   }
 
   const dropDownChange = (item) => {
-    setDifficulty(item)
+    setDifficulty("")
+    setTimeout(()=>setDifficulty(item), 200);
   }
 
   return (
@@ -127,7 +149,9 @@ const MathScreen = ({ route }) => {
       <View style={{flex: 1, backgroundColor:"#0096ff"}}>
       <StatusBar hidden />
           <View style={[styles.section, {alignItems: 'center', justifyContent: 'center'}]}>
-            <Text style={{fontSize: 50}}>Score: {score}</Text>
+            <Text style={{fontSize: 50}}>Last Score: {lastScore}</Text>
+            <Text style={{fontSize: 50}}>Current Score: {score}</Text>
+            <Text style={{fontSize: 50}}>Seconds left: {curTimer}</Text>
           </View>
           {/* Middle Container */}
           <View style={[styles.section, {flex: 2, justifyContent: 'center', alignItems: 'center'}]}>
